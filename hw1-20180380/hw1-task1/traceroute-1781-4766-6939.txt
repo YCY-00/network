@@ -1,0 +1,8 @@
+https://lg.cern.ch/
+
+inet.0: 954999 destinations, 1992099 routes (634277 active, 0 holddown, 581981 hidden)
++ = Active Route, - = Last Active, * = Both
+
+A V Destination        P Prf   Metric 1   Metric 2  Next hop        AS path
+  ? 143.248.0.0/16     B 170      10200         10                  6939 4766 1781 I
+  unverified                                       >192.65.185.143

@@ -1,0 +1,2 @@
+the first graph shows the total number of segments sent over time from the client side. The number of segments sent in the graph increases linearly. The graph repeats abrupt increases followed by gradual increases.
+Slow start occurs very quickly due to TCP cubic, so it appears temporarily. The point where the slope increases rapidly is the slow start part. The steep slope is the linear increase section due to congestion avoidance, and the gentle slope is the section where cwnd decreases due to congestion.

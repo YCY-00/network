@@ -1,0 +1,2 @@
+If cwnd increases abnormally, it monopolizes network resources and reduces the bandwidth of others, which causes frequent congestion and lowers the overall network performance.
+If many users adopt this strategy, the bandwidth can't be allocated fairly, which increases network congestion and reduces network performance. This can lead to regulations such as traffic capping.

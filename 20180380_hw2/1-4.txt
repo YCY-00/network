@@ -1,0 +1,1 @@
+If the ACK provides details about the segments received, the sender can identify and retransmit lost parts. This method ensures integrity by retransmitting lost segments while maintaining higher rate.

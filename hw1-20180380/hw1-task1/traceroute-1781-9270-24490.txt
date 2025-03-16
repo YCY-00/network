@@ -1,0 +1,38 @@
+http://lg.lan.switch.ch/lg/lg.cgi
+
+Results of query:
+Router: swiBA3.switch.ch
+Command: show bgp ipv4 unicast 143.248.143.1
+
+Fri Sep 27 09:13:51.554 CEST
+BGP routing table entry for 143.248.0.0/16
+Versions:
+  Process           bRIB/RIB   SendTblVer
+  Speaker         1505295839   1505295839
+Last Modified: Sep 27 05:38:27.298 for 03:35:24
+Paths: (10 available, best #5)
+  Not advertised to any peer
+  Path #5: Received by speaker 0
+  Not advertised to any peer
+  20965 24490 9270 1781
+    130.59.32.50 (metric 1841) from 130.59.32.1 (130.59.32.50)
+      Origin IGP, localpref 106, valid, internal, best, group-best
+      Received Path ID 1, Local Path ID 1, version 1504458514
+      Community: 9270:9270 9270:65155 20965:3000 20965:5000 20965:6000 20965:24490 20965:65530 24489:65155 24489:65200
+      Originator: 130.59.32.50, Cluster list: 130.59.32.44
+  Path #6: Received by speaker 0
+  Not advertised to any peer
+  20965 24490 9270 1781
+    130.59.32.50 (metric 1841) from 130.59.32.2 (130.59.32.50)
+      Origin IGP, localpref 106, valid, internal
+      Received Path ID 1, Local Path ID 0, version 0
+      Community: 9270:9270 9270:65155 20965:3000 20965:5000 20965:6000 20965:24490 20965:65530 24489:65155 24489:65200
+      Originator: 130.59.32.50, Cluster list: 130.59.32.11
+  Path #7: Received by speaker 0
+  Not advertised to any peer
+  20965 24490 9270 1781
+    130.59.32.50 (metric 1841) from 130.59.32.3 (130.59.32.50)
+      Origin IGP, localpref 106, valid, internal
+      Received Path ID 1, Local Path ID 0, version 0
+      Community: 9270:9270 9270:65155 20965:3000 20965:5000 20965:6000 20965:24490 20965:65530 24489:65155 24489:65200
+      Originator: 130.59.32.50, Cluster list: 130.59.32.13

@@ -1,0 +1,3 @@
+I opened two processes on the wsl ubuntu environment installed on Windows and used them as a server and a client respectively.
+For TCP connection, iperf3 command was used. On the server, 'iperf3 -s -p 5000' was used to open the server with port number 5000. On the client, 'iperf3 -c <ip> -p 5000 -t 10 -f m -i 2 &' was used to send communication to the server. To induce congestion, the client opened 3 ports in the background.
+For packet capture, I used '$ sudo tcpdump -i lo tcp and port 5000 -w dump.pcap &' on the client(local). I used tcpdump before opening the client with iperf tocapture the entire communication log. Finally, I used jobs and kill commands to terminate tcpdump and save the captured packets.

@@ -1,0 +1,22 @@
+http://lg.lan.switch.ch/lg/lg.cgi
+
+Results of query:
+Router: swiBA3.switch.ch
+Command: show bgp ipv4 unicast 143.248.143.1
+
+Fri Sep 27 09:13:51.554 CEST
+BGP routing table entry for 143.248.0.0/16
+Versions:
+  Process           bRIB/RIB   SendTblVer
+  Speaker         1505295839   1505295839
+Last Modified: Sep 27 05:38:27.298 for 03:35:24
+Paths: (10 available, best #5)
+  Not advertised to any peer
+  Path #8: Received by speaker 0
+  Not advertised to any peer
+  174 4766 1781, (received-only)
+    149.6.34.5 from 149.6.34.5 (38.28.1.70)
+      Origin IGP, metric 171200, localpref 100, valid, external
+      Received Path ID 0, Local Path ID 0, version 0
+      Community: 174:21001 174:22013
+      Origin-AS validity: not-found

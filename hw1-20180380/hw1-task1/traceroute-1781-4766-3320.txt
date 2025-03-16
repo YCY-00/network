@@ -1,0 +1,11 @@
+https://probe-networks.de/lg/
+
+Router: Frankfurt Telehouse Europe (DE-CIX)
+Command: show route 143.248.143.1
+
+inet.0: 952473 destinations, 2704624 routes (948198 active, 0 holddown, 7834 hidden)
++ = Active Route, - = Last Active, * = Both
+
+143.248.0.0/16     *[BGP/170] 2w3d 20:00:30, MED 0, localpref 100
+                      AS path: 3320 4766 1781 I, validation-state: unverified
+                    >  to 80.150.168.250 via xe-0/0/3.0

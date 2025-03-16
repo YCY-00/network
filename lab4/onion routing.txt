@@ -1,0 +1,195 @@
+onion routing: 다중 암호화 계층으로 traffic 보호, onion router(OR)로 구성된 경로 설정, 데이터를 전송하며 각 라우터가 암호화를 해제해 다음 라우터로 전달, 최종 라우터에서 원래 데이터 복호화 및 서버 전달
+
+Authority server: OR에 대한 ip 주소 및 id 정보를 관리하는 중앙 집중화된 신뢰 가능한 서버. authority 서버의 ip 주소와 공개 키는 공개적으로 개방되어 있다. 저장된 OR 정보를 이용해 회로를 구성한다.
+
+*RSA: 공개 키와 개인 키 쌍을 사용하는 암호화 방식. 공개키로 암호화한 후 개인키로 복호화. 각각의 OR은 자신의 공개 키로 암호화된 메시지를 수신해 복호화한 후 다음 OR에 넘긴다.
+*Diffie-Hellman Key Exchange: 두 노드가 각각의 비밀 키를 생성, 계산한 공개 키를 교환, 교환한 공개 키와 자신의 비밀 키를 조합하여 동일한 공유 키 조합(키=생성자의 x 제곱값, 공개키=제곱의 mod 값 -> 결합법칙에 의해 공유 키는 동일 값). 클라이언트와 중계기가 공유 키를 생성하기 위해 사용
+*AES: 하나의 키(RSA와 달리 암호화, 복호화 키 동일)를 사용하여 데이터 암호화 및 복호화 -> 비대칭 암호화보다 빠름. OR 간 데이터 전송 시 공유 키를 사용해 데이터 암호화
+1. 클라이언트와 각 Onion Router 간 공유 대칭 키 생성: Diffie-Hellman 키 교환을 수행하고, RSA를 사용해 공개 키(공유 키의 원료)를 안전히 교환 및 공유 키(클라이언트 & 각각의 OR) 생성.
+2. 클라이언트가 데이터 다중 암호화: 각 Onion Router의 대칭 키를 사용해 데이터를 다중 AES 암호화.
+3. 라우터 간 데이터 전달: 각 Onion Router는 자신만의 대칭 키로 암호화 레이어를 복호화하고, 나머지 데이터를 다음 라우터로 전달.
+4. 목적지 서버와의 통신: 마지막 Onion Router는 복호화된 데이터를 서버로 전달. 응답 데이터를 클라이언트에게 다시 암호화된 상태로 전달.
+
+cell: tor 채널의 기본 통신 단위. 고정 길이 셀(circID, command, body)과 가변 길이 셀(circID, command, length, body)로 나뉜다.
+-circID: 셀이 연결된 회로 결정. 누구와도 연결되지 않은 경우 0. 로컬 식별자이므로 각각의 채널에서 다른 circID 획득
+-command: CREATE(번호 존재, 길이 가변, 회로 생성), CREATED(번호 존재, 길이 가변, 회로 생성에 대한 ACK), RELAY(번호 존재, 길이 고정, data 중계), DESTROY(번호 존재, 길이 고정, 회로 종료), VERSIONS(번호 X, 길이 가변, 링크 프로토콜 버전을 교환하여 호환성 확인), NETINFO(번호 X, 길이 가변, 네트워크 정보(IP) 교환으로 연결 상태 확인), CERTS(번호 X, 길이 고정, 인증서 제공)
+-body: big endian(큰 단위부터(앞자리부터) 숫자 표현) 형식
+
+mini_crypt.py
+-deserialize_private_key_from_bytes(): PEM 파일에서 바이트 데이터를 읽어 RSAPrivateKey(개인 키) 객체로 변환.
+-serialize_private_key_into_bytes(): RSAPrivateKey(개인 키) 객체를 PEM 형식의 바이트 데이터로 변환.
+-deserialize_public_key_from_bytes(): PEM 파일에서 바이트 데이터를 읽어 RSAPublicKey(공개 키) 객체로 반환.
+-serialize_public_key_into_bytes(): RSAPublicKey(공개 키) 객체를 PEM 형식의 바이트 데이터로 변환.
+-RSA_sign_msg(): 개인 키와 메세지를 받아 signature 생성
+-RSA_verify_sign(): 공개 키와 메세지, signature를 받아 signature 검증
+-RSA_encrypt_msg(): 공개 키와 메세지를 받아 암호화
+-RSA_decrypt_msg(): 개인 키와 암호화된 메세지를 받아 복호화
+-DH_gen_key_pair(): g와 p 값을 받아 dh_개인 키와 dh_공개 키 생성
+-DH_gen_public_num(): 공개 키를 받아 공개 숫자 계산
+-DH_derive_shared_key(): g, p, dh_개인 키, 공개 숫자를 받아 공유 키 생성
+-AES_encrypt(): 공유 키와 메세지를 받아 메세지 암호화
+-AES_decrypt(): 공개 키와 암호화된 메세지를 받아 복호화
+
+relay_cell
+-relay_command: relay 처리
+-recognized: 중계 노드에서 처리할지 결정
+-digest: 체크섬
+-data_length: 데이타 길이
+-data
+
+client(host)
+-ip: 자신 ip 주소
+-running: 실행 여부
+-auth_ip: 인증 서버 ip 주소
+-auth_port: 인증 서버 port #
+-nickname: 클라이언트 식별자
+-circ_id: 사용할 or 회로 id
+
+-dict_descriptors: 인증 서버로부터 수신한 or 디스크립터 정보(or 닉네임, ip 주소, 포트, RSA 공개키 등) 저장(dict)
+-circuit: or 회로 정보 저장(list)
+-sock: 통신용 socket 객체 저장
+-web_server_ip: 웹 서버 ip 주소
+-web_server_port: 웹 서버 port #
+-circuit_or_names: 회로를 구성하는 or 닉네임 리스트
+-setup_logger(): 활동 기록용 로거 설정
+
+-public_key: RSA 공개 키
+-private_key: RSA 비밀 키
+-auth_public_key: 인증 서버 RSA 공개 키
+
+relay(or)
+-ip: or ip 주소
+-port: or port #
+-running: 실행 여부
+-auth_ip: 인증 서버 ip 주소
+-auth_port: 인증 서버 port #
+-nickname: or 식별자
+-circ_id_base: or 회로 id의 기본값(circ_id의 시초)
+-dict_desciptors: 인증 서버에서 수신한 or 정보
+-sock_list: 활성화된 소켓 목록
+-public_key: or의 RSA 공개 키
+-private_key: or의 RSA 비밀 키
+-auth_public_key: 인증 서버의 RSA 공개 키
+-sock: 연결용 메인 소켓
+-logger(): 활동 기록용 로거 객체
+-keys_dir: 키 정보가 저장된 디렉터리 경로
+
+-----------
+
+Task 1-1: Open Channel with the First Router
+*VERSIONS Cell 송수신
+클라이언트는 첫 번째 라우터로 VERSIONS Cell을 보내고, 이를 통해 지원하는 프로토콜 버전을 협상합니다.
+클라이언트:
+VERSIONS 객체 생성 → 지원하는 버전 리스트 포함 (예: [3]).
+to_bytes()로 직렬화 후 sock.sendall()로 전송.
+첫 번째 라우터로부터 응답을 수신.
+라우터:
+수신된 VERSIONS Cell 파싱 (버전 리스트 확인).
+버전 리스트를 상호 비교아여 공통된 version을 담아 VERSIONS Cell로 응답.
+
+*CERTS Cell 송수신
+클라이언트는 라우터의 인증서 정보를 요청합니다.
+라우터:
+CERTS 객체 생성 → PEM 데이터 및 서명 포함.
+클라이언트로 전송.
+클라이언트:
+from_bytes()로 수신된 CERTS Cell 파싱.
+라우터의 서명을 검증해 인증서의 유효성을 확인(제공자 판별)
+
+*NETINFO Cell 송수신
+클라이언트와 라우터 간 네트워크 연결 정보를 교환.
+클라이언트:
+자신의 네트워크 정보(IP 주소 등)를 포함하는 NETINFO Cell 생성, 전송하여 라우터와 연결 완료를 확인.
+라우터의 응답을 받아 ip 비교.
+라우터:
+클라이언트의 NETINFO Cell 수신 및 파싱, ip 비교 및 응답.
+
+Task 1-2: Open Circuit
+*CREATE Cell 송수신
+클라이언트는 라우터에 Diffie-Hellman 공개키를 암호화하여 전달합니다.
+클라이언트:
+Diffie-Hellman 키 쌍 생성.
+공개키를 라우터의 RSA 공개키로 암호화.
+암호화된 공개키를 포함하는 CREATE Cell 생성 및 전송.
+라우터:
+CREATE Cell 수신 및 파싱.
+Diffie-Hellman 키 쌍 생성 및 공유 비밀키 계산.
+자신의 공개키와 서명을 포함한 CREATED Cell 생성 및 응답.
+
+*CREATED Cell 송수신
+라우터는 클라이언트가 보낸 키 교환 요청을 처리한 후 응답합니다.
+라우터:
+클라이언트의 dh 공개키를 사용해 공유 비밀키를 생성.
+자신의 Diffie-Hellman 공개키 및 서명 포함.
+CREATED Cell로 응답.
+클라이언트:
+CREATED Cell 수신 및 파싱.
+라우터의 dh 공개키를 사용해 동일한 공유 비밀키 생성.
+
+Task 2: Extend Circuit
+*RELAY Cellㅈ
+회로를 따라 end-to-end 데이터 전송
+클라이언트:
+회로에 포함된 라우터 별 공유 키를 사용하여 M번 암호화
+응답을 M번 복호화하여 결과 확인
+라우터:
+command를 확인하고 공유 비밀 키를 사용하여 body 복호화(onion cell)
+-전부 복호화되지 않은 경우(cell 인식 불가), 다음 라우터로 전달
+-전부 복호호화된 경우(M번째 or인 경우), 공유 비밀 키를 1회만 사용하여 암호화
+ -RELAY 셀의 명령에 따라 동작
+역전파를 받은 경우 body 암호화 후 이전 라우터로 전달
+
+RELAY Cell - EXTEND Command
+클라이언트가 마지막 라우터에 채널을 확장하도록 요청(회로에 이미 존재하는 라우터 사이에 새로운 연결 설정)
+클라이언트:
+EXTEND 명령으로 다음 라우터 정보를 포함하는 RELAY 셀 생성.
+경로 내의 모든 OR에 대해, 각각의 공유 키를 사용하여 OR의 개수만큼 셀 암호화(반복하여 전달).
+첫 번째 라우터로 전송.
+M+1이 N에 도달할 때까지 반복.
+라우터:
+셀이 암호화된 경우 다음 라우터로 CREATE Cell 전송.
+셀이 완전히 복호화된 경우 EXTEND 명령을 받고 지정된 M+1 라우터와 채널 열기(task 1과 유사, create 셀의 경우 client와 달리 직접 생성하는 대신 수신된 encrpyted_dh_public_key 필드 값 사용)
+결과를 클라이언트로 전달하는 RELAY Cell 생성 (Command: EXTENDED).
+
+RELAY Cell - EXTENDED Command
+라우터는 확장된 경로의 상태를 클라이언트에 알립니다.
+클라이언트:
+첫 번째 라우터로부터 EXTENDED Cell 수신.
+다음 라우터로의 확장이 성공적으로 이루어졌음을 확인.
+
+Task 3: Communicate with Web Server
+*RELAY Cell - BEGIN Command
+클라이언트는 마지막 라우터를 통해 웹 서버와의 통신을 시작합니다.
+클라이언트:
+웹 서버의 주소와 포트를 포함하는 RELAY Cell 생성 (Command: BEGIN).
+마지막 라우터로 전송.
+마지막 라우터:
+웹 서버와 연결 시도.
+성공 시 RELAY Cell로 응답 (Command: CONNECTED).
+
+*RELAY Cell - DATA Command
+클라이언트는 데이터를 웹 서버로 전송하며, 응답을 받습니다.
+클라이언트:
+전송할 데이터를 포함하는 RELAY Cell 생성 (Command: DATA).
+마지막 라우터로 전송.
+마지막 라우터:
+웹 서버로 데이터를 전송하고 응답을 받음.
+응답 데이터를 클라이언트로 전달.
+
+Task 4: Close Connection
+*RELAY Cell - END Command
+클라이언트는 웹 서버와의 연결을 종료합니다.
+클라이언트:
+연결 종료 요청을 포함하는 RELAY Cell 생성 (Command: END).
+마지막 라우터로 전송.
+마지막 라우터:
+웹 서버와의 연결을 종료.
+
+*DESTROY Cell
+클라이언트는 전체 회로를 종료합니다.
+클라이언트:
+DESTROY Cell 생성 및 전송.
+소켓을 닫고 회로 정리.
+라우터:
+DESTROY Cell 수신 시 다음 라우터로 전달.
+회로 관련 리소스 해제

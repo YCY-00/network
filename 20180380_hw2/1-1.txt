@@ -1,0 +1,3 @@
+TCP increases  the cwnd each time an ACK is received. During the slow start, cwnd is increased by 1 MMS per ACK, and during the congestion avoidance, cwnd is increased by 1 MMS*(MMS/cwnd) per ACK.
+When ACKs with higher ack numbers are sent, the sender perceives more packets as successfully received than actual. So the sender to increase the cwnd faster, resulting in faster transmission speed.
+Skipping lost segments allows TCP to continue transmission without retransmitting, thus achieving higher throughput. However, this can lead to data corruption, as lost segments can't be recovered.
